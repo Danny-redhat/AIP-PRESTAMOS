@@ -1,0 +1,135 @@
+-- =====================================================
+-- BASE DE DATOS COMPLETA - SISTEMA DE PRÉSTAMO LAPTOPS
+-- =====================================================
+CREATE DATABASE IF NOT EXISTS prestamos_db 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_spanish2_ci;
+USE prestamos_db;
+-- =====================================================
+-- 1) TABLA USUARIOS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS usuarios (
+  id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+  dni VARCHAR(20) NOT NULL UNIQUE,
+  nombre_completo VARCHAR(150) NOT NULL,
+  area VARCHAR(80),
+  telefono VARCHAR(30),
+  correo VARCHAR(150) NOT NULL UNIQUE,
+  contraseña VARCHAR(255) NOT NULL,
+  rol ENUM('administrador','profesor') NOT NULL DEFAULT 'profesor',
+  fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- =====================================================
+-- 2) TABLA LAPTOPS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS laptops (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  codigo VARCHAR(50) NOT NULL UNIQUE,
+  marca VARCHAR(60),
+  modelo VARCHAR(80),
+  tipo ENUM('tipear','proyectar','otros') DEFAULT 'tipear',
+  estado ENUM('disponible','prestada','reparacion','baja') NOT NULL DEFAULT 'disponible',
+  accesorios JSON NULL,
+  observaciones TEXT,
+  fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- =====================================================
+-- 3) TABLA SOLICITUDES
+-- =====================================================
+CREATE TABLE IF NOT EXISTS solicitudes (
+  id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  id_laptop INT NULL,
+  tipo_solicitud ENUM('proyectar','tipear','otros') NOT NULL,
+  mensaje TEXT,
+  codigo_confirmacion VARCHAR(12),
+  fecha_solicitud DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  hora_solicitud TIME NOT NULL DEFAULT (CURRENT_TIME),
+  estado ENUM('pendiente','aceptada','rechazada','cancelada') NOT NULL DEFAULT 'pendiente',
+  FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+  FOREIGN KEY (id_laptop) REFERENCES laptops(id) ON DELETE SET NULL,
+  INDEX (id_usuario),
+  INDEX (estado)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- =====================================================
+-- 4) TABLA PRESTAMOS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS prestamos (
+  id_prestamo INT AUTO_INCREMENT PRIMARY KEY,
+  solicitud_id INT NOT NULL,
+  laptop_id INT NOT NULL,
+  fecha_prestamo DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  hora_prestamo TIME NOT NULL DEFAULT (CURRENT_TIME),
+  accesorios JSON NULL,
+  codigo_confirmacion VARCHAR(12) NOT NULL,
+  estado ENUM('prestado','devuelto') NOT NULL DEFAULT 'prestado',
+  responsable_devolucion VARCHAR(200) NULL,
+  fecha_devolucion DATETIME NULL,
+  observaciones TEXT,
+  FOREIGN KEY (solicitud_id) REFERENCES solicitudes(id_solicitud) ON DELETE CASCADE,
+  FOREIGN KEY (laptop_id) REFERENCES laptops(id) ON DELETE RESTRICT,
+  INDEX (laptop_id),
+  INDEX (estado)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- =====================================================
+-- 5) TABLA INCIDENCIAS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS incidencias (
+  id_incidencia INT AUTO_INCREMENT PRIMARY KEY,
+  laptop_id INT NOT NULL,
+  usuario_id INT NULL,
+  descripcion TEXT NOT NULL,
+  tipo ENUM('hardware','software','otros') DEFAULT 'otros',
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  estado ENUM('abierta','en revisión','cerrada') DEFAULT 'abierta',
+  FOREIGN KEY (laptop_id) REFERENCES laptops(id) ON DELETE CASCADE,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
+  INDEX (laptop_id),
+  INDEX (estado)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- =====================================================
+-- 6) TABLA HISTORIAL
+-- =====================================================
+CREATE TABLE IF NOT EXISTS historial (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  accion VARCHAR(80) NOT NULL,
+  usuario_id INT NULL,
+  descripcion TEXT,
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
+  INDEX (usuario_id)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- =====================================================
+-- 7) TABLA NOTIFICACIONES
+-- =====================================================
+CREATE TABLE IF NOT EXISTS notificaciones (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT NOT NULL,
+  mensaje TEXT NOT NULL,
+  leido TINYINT(1) DEFAULT 0,
+  fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- =====================================================
+-- 8) ADMIN POR DEFECTO
+-- =====================================================
+-- Password: admin123
+INSERT INTO usuarios (dni, nombre_completo, correo, contraseña, rol)
+VALUES ('00000000', 'Administrador General', 'admin@correo.com', 
+        '$2y$10$dPpU6TcQZhSDxwTnqcy6POYgFdX6A41rSf1fTeXZpPtLxlFQh2wIC', 
+        'administrador')
+ON DUPLICATE KEY UPDATE correo=correo;

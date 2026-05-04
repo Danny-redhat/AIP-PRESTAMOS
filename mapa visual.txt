@@ -1,0 +1,260 @@
+AIP-PRESTAMOS/
+│
+├── config/
+│   ├── conexion.php          # Conexión a la base de datos
+│   └── mail.php              # Función enviarCorreo()
+│
+├── mail/                     # PHPMailer
+│   └── src/
+│       ├── Exception.php
+│       ├── PHPMailer.php
+│       └── SMTP.php
+│
+├── admin/                    # Archivos para el rol Administrador
+│   ├── usuarios.php          # Listado de profesores (CRUD)
+│   ├── usuarios_agregar.php
+│   ├── usuarios_editar.php
+│   ├── usuarios_eliminar.php
+│   │
+│   ├── laptops.php           # Listado de laptops (CRUD)
+│   ├── laptops_agregar.php
+│   ├── laptops_editar.php
+│   ├── laptops_eliminar.php
+│   │
+│   ├── solicitudes_listar.php  # Aceptar/Rechazar solicitudes
+│   ├── historial.php           # Historial de acciones
+│   └── notificaciones.php      # Notificaciones de préstamos/incidencias
+│
+├── profesor/                 # Archivos para el rol Profesor
+│   ├── solicitudes.php        # Formulario de solicitud de laptops
+│   ├── solicitudes_listar.php # Listado de sus solicitudes
+│   ├── incidencias.php        # Formulario para reportar incidencias
+│   └── incidencias_listar.php # Listado de incidencias propias
+│
+├── index.php                 # Página de inicio/redirección
+├── login.php                 # Login de usuarios
+├── logout.php                # Cerrar sesión
+│
+└── assets/
+    ├── js/
+    │   └── incidencias_notif.js
+    └── img/
+        └── logo.png          # Logo del colegio Modesto Basadre
+
+💡 Notas importantes:
+
+Todos los archivos *_agregar.php, *_editar.php, *_eliminar.php pertenecen al CRUD.
+
+config/conexion.php y config/mail.php se incluyen con require en todos los archivos que necesiten BD o enviar correos.
+
+assets/js/ y assets/img/ es donde se guarda JavaScript y logos/recursos visuales.
+
+Los profesores solo ven lo que está en profesor/ y los administradores solo lo de admin/.
+
+Las notificaciones (sonido y badge) van dentro de los archivos del profesor y del admin según corresponda.
+
+Si quieres, mañana podemos hacer un esquema de la navegación de la interfaz, con menús, colores y posición del logo para que el CSS quede perfecto.
+
+
+
+
+Mapa Visual de Navegación para el Sitio Web
+1. Página Principal (index.php)
+
+Menú de navegación:
+
+Logo (en la parte superior izquierda: "Modesto Basadre" con los colores azul marino y amarillo)
+
+Opciones de login/registro (en la parte superior derecha):
+
+Iniciar sesión
+
+Registrarse (solo para admins)
+
+Barra de navegación (con links a las principales secciones según el rol):
+
+2. Menú para el Administrador (admin/)
+
+Menú lateral (o superior, dependiendo del diseño):
+
+Usuarios
+
+Listado de usuarios (usuarios.php)
+
+Agregar usuario (usuarios_agregar.php)
+
+Editar usuario (usuarios_editar.php)
+
+Eliminar usuario (usuarios_eliminar.php)
+
+Laptops
+
+Listado de laptops (laptops.php)
+
+Agregar laptop (laptops_agregar.php)
+
+Editar laptop (laptops_editar.php)
+
+Eliminar laptop (laptops_eliminar.php)
+
+Solicitudes
+
+Ver todas las solicitudes de laptops (solicitudes_listar.php)
+
+Aceptar/Rechazar solicitudes
+
+Historial
+
+Ver historial de préstamos/incidencias (historial.php)
+
+Notificaciones
+
+Ver notificaciones de préstamos/incidencias (notificaciones.php)
+
+Cerrar sesión
+
+Estilo:
+
+Menú lateral con opciones claramente diferenciadas
+
+Colores predominantes: azul marino para la barra lateral y botones, amarillo para el texto resaltado
+
+Notificación de alertas con badge rojo (indicación de nuevas incidencias/solicitudes)
+
+3. Menú para el Profesor (profesor/)
+
+Menú superior o lateral:
+
+Solicitudes
+
+Ver solicitudes (solicitudes_listar.php)
+
+Hacer una nueva solicitud (formulario de solicitud de laptop)
+
+Incidencias
+
+Ver incidencias reportadas (incidencias_listar.php)
+
+Reportar nueva incidencia (formulario para reporte de incidencias)
+
+Cerrar sesión
+
+Estilo:
+
+Menú superior con los mismos colores (azul marino y amarillo)
+
+Notificación de alertas con badge rojo (indicación de nuevas incidencias/solicitudes)
+
+Opciones visibles y claras para las solicitudes y reportes
+
+4. Diseño del Header y Footer
+Header:
+
+En la parte superior siempre visible:
+
+Logo del colegio (en el centro o a la izquierda)
+
+Menú de navegación (si el usuario está logueado, las opciones cambian según su rol)
+
+Barra de búsqueda (opcional)
+
+Botón de cierre de sesión visible cuando el usuario está logueado
+
+Footer:
+
+Información de contacto del colegio:
+
+Dirección
+
+Teléfono
+
+Correo electrónico
+
+Redes sociales
+
+Colores: fondo oscuro, texto amarillo
+
+Derechos reservados con año actual
+
+5. Pantallas de Solicitudes (Admin y Profesor)
+Admin:
+
+Ver todas las solicitudes de los profesores.
+
+Listado de solicitudes con estado (pendiente, aceptada, rechazada).
+
+Cada fila tiene botones para aceptar o rechazar.
+
+Si el estado es aceptado, aparece un campo para generar código que será enviado al correo del profesor.
+
+Cada fila tiene un badge de notificación que indica el estado (pendiente, aceptada, rechazada).
+
+Profesor:
+
+Ver su historial de solicitudes (estado, fecha, tipo de laptop solicitada).
+
+Si la solicitud fue aceptada, se mostrará el código de confirmación para recoger la laptop.
+
+Formulario para hacer una nueva solicitud (tipo de laptop: tipear, proyectar, otros).
+
+Formulario para reportar incidencias (tipo de incidencia: hardware, software, otros).
+
+6. Ejemplo de Navegación y Diseño Visual
+
+Menú superior: Tiene el logo a la izquierda, y a la derecha botones de login/registro si no ha iniciado sesión.
+
+Si el usuario está logueado, verá su nombre y un botón de cierre de sesión.
+
+Menú lateral (para el admin):
+
+Si es administrador, tendrá un menú desplegable que incluye:
+
+Usuarios
+
+Laptops
+
+Solicitudes
+
+Historial
+
+Notificaciones
+
+Badge en rojo (con el número de solicitudes pendientes/incidencias nuevas) en el icono de notificaciones.
+
+Color de fondo: Fijo para la barra lateral: Azul marino
+
+Botones y enlaces: Amarillo para destacar y dar contraste.
+
+7. Ejemplo Visual del Mapa de Pantallas
+┌────────────────────────────────────────┐
+│        [Logo del Colegio]              │
+├────────────────────────────────────────┤
+│              Menú de Navegación        │
+│                                        │
+│  [Usuarios]    [Laptops]   [Solicitudes]│
+│  [Historial]   [Notificaciones]         │
+│  [Cerrar Sesión]                        │
+└────────────────────────────────────────┘
+
+┌────────────────────────────────────────┐
+│              Contenido de la Página   │
+│                                        │
+│  [Formulario Solicitud]                │
+│  [Listado de Solicitudes]              │
+│  [Historial de Incidencias]            │
+└────────────────────────────────────────┘
+
+┌────────────────────────────────────────┐
+│        [Pie de página]                 │
+│        Dirección, teléfono, redes      │
+└────────────────────────────────────────┘
+
+Colores:
+
+Azul Marino: Para las áreas de fondo como el header, footer, y barra lateral.
+
+Amarillo: Para resaltar botones, títulos, enlaces, y notificaciones.
+
+Blanco: Para texto normal y formularios.
+
+Este esquema es solo una base para el diseño y la organización de tu interfaz. Ahora puedes tomar estos conceptos y transformarlos en código CSS que siga este patrón visual.

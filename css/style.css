@@ -1,0 +1,355 @@
+/* ===============================
+   VARIABLES INSTITUCIONALES
+================================ */
+:root {
+    --azul: #003366;
+    --azul-oscuro: #002244;
+    --amarillo: #FFD700;
+    --amarillo-hover: #FFC107;
+    --blanco: #ffffff;
+    --gris-fondo: #f4f6f9;
+    --gris-borde: #dddddd;
+    --rojo: #dc3545;
+    --verde: #28a745;
+}
+
+/* ===============================
+   RESET BÁSICO
+================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   ESTILO GENERAL
+================================ */
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--gris-fondo);
+    color: #333;
+}
+
+h1, h2, h3 {
+    color: var(--azul);
+    margin-bottom: 15px;
+}
+
+/* ===============================
+   NAVBAR
+================================ */
+.navbar {
+    background-color: var(--azul);
+    color: var(--amarillo);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    flex-wrap: wrap;
+}
+
+.navbar .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar img {
+    height: 50px;
+}
+
+.navbar .menu {
+    display: flex;
+    gap: 15px;
+}
+
+.navbar a {
+    color: var(--amarillo);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   CONTENEDORES
+================================ */
+.container,
+.contenedor {
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: var(--blanco);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ===============================
+   BOTONES
+================================ */
+button {
+    background-color: var(--amarillo);
+    color: var(--azul);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: var(--amarillo-hover);
+}
+
+.btn-success {
+    background-color: var(--verde);
+    color: var(--blanco);
+}
+
+.btn-danger {
+    background-color: var(--rojo);
+    color: var(--blanco);
+}
+
+.btn-success:hover,
+.btn-danger:hover {
+    opacity: 0.85;
+}
+
+/* ===============================
+   TABLAS
+================================ */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--blanco);
+    margin-top: 15px;
+}
+
+th {
+    background-color: var(--azul);
+    color: var(--amarillo);
+    padding: 10px;
+    text-align: left;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid var(--gris-borde);
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* ===============================
+   FORMULARIOS
+================================ */
+form {
+    max-width: 500px;
+    margin: auto;
+}
+
+label {
+    font-weight: bold;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0 12px;
+    border-radius: 6px;
+    border: 1px solid var(--gris-borde);
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* ===============================
+   BADGES (ESTADOS)
+================================ */
+.badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    color: white;
+}
+
+.badge-pendiente {
+    background-color: var(--amarillo-hover);
+    color: #000;
+}
+
+.badge-aceptada {
+    background-color: var(--verde);
+}
+
+.badge-rechazada {
+    background-color: var(--rojo);
+}
+
+/* ===============================
+   MENÚ ADMIN / DASHBOARD
+================================ */
+.menu-admin,
+.dashboard-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.menu-admin li a,
+.dashboard-grid a button {
+    display: block;
+    width: 100%;
+    background-color: var(--azul);
+    color: var(--amarillo);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.menu-admin li a:hover {
+    background-color: var(--azul-oscuro);
+}
+
+/* ===============================
+   TARJETAS
+================================ */
+.card {
+    border: 1px solid var(--azul);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+/* ===============================
+   LINKS
+================================ */
+a {/* ===============================
+   NAVBAR
+================================ */
+.navbar {
+    background-color: var(--azul);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    flex-wrap: wrap;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo {
+    height: 45px;
+}
+
+.titulo {
+    font-weight: bold;
+    font-size: 18px;
+    color: var(--amarillo);
+}
+
+.navbar-links {
+    list-style: none;
+    display: flex;
+    gap: 15px;
+    padding: 0;
+    margin: 0;
+}
+
+.navbar-links li a {
+    color: white;
+    font-weight: bold;
+    padding: 6px 10px;
+    border-radius: 5px;
+}
+
+.navbar-links li a:hover {
+    background-color: rgba(255,255,255,0.15);
+}
+
+.logout {
+    background-color: var(--rojo);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .navbar-links {
+        width: 100%;
+        flex-direction: column;
+        margin-top: 10px;
+    }
+}
+  text-decoration: none;
+}
+
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .navbar .menu {
+        flex-direction: column;
+    }
+
+    table, th, td {
+        font-size: 14px;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+/* ===============================
+   FIX NAVBAR HORIZONTAL
+   (sin afectar el resto del sistema)
+================================ */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+}
+
+/* izquierda */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* centro */
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 15px;
+    margin: 0;
+    padding: 0;
+}
+
+/* derecha */
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

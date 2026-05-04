@@ -1,0 +1,139 @@
+## ✅ 1. BASE DE DATOS (YA LISTA)
+
+✔ Usar **solo el SQL limpio final** (el que acabas de mandar)
+✔ No volver a duplicar tablas
+✔ Los ENUM ya están correctos
+✔ No tocar la BD por ahora
+
+---
+
+## 🎨 2. VISUALIZACIÓN / DISEÑO (UI – UX)
+
+### 🟦 Dashboard (Admin)
+
+☐ Mostrar tarjetas con:
+
+* Laptops disponibles
+* Laptops prestadas
+* Solicitudes pendientes
+* Incidencias abiertas
+
+☐ Usar tarjetas simples con CSS (`.card`)
+
+---
+
+### 🟩 Estados con colores
+
+☐ Colorear estados:
+
+* pendiente → naranja
+* aceptada → verde
+* rechazada → rojo
+* prestado → azul
+* devuelto → gris
+
+☐ Usar `match()` o `if` en PHP
+
+---
+
+### 🧾 Tablas más claras
+
+☐ Tablas con pocas columnas
+☐ Acciones a la derecha
+☐ Usar íconos (🟢 🔴 📩 ⚠)
+☐ Botones claros: Prestar / Ver / Devolver
+
+---
+
+## 📧 3. CORREO (FORMA SENCILLA)
+
+### 📌 Preparación
+
+☐ Tener una cuenta Gmail
+☐ Activar verificación en 2 pasos
+☐ Crear **contraseña de aplicación**
+
+---
+
+### 🧩 PHPMailer
+
+☐ Usar `phpmailer-master`
+☐ Crear archivo `enviar_correo.php`
+☐ Configurar SMTP de Gmail
+☐ Crear función `enviarCorreo()`
+
+---
+
+### ✉️ Cuándo enviar correos
+
+☐ Solicitud aceptada
+☐ Solicitud rechazada
+☐ Laptop devuelta
+☐ Incidencia creada
+
+☐ No enviar correos innecesarios
+
+---
+
+## 🔔 4. NOTIFICACIONES (EN LA WEB)
+
+☐ Insertar notificación cuando:
+
+* se acepta una solicitud
+* se devuelve una laptop
+* se crea una incidencia
+
+☐ Mostrar notificaciones no leídas
+☐ Marcar como leídas al abrir
+
+---
+
+## 🧠 5. DETALLES QUE TE HACEN VER PRO
+
+### ✔ Confirmaciones
+
+☐ `confirm('¿Seguro?')` en acciones importantes
+
+### ✔ Mensajes de sistema
+
+☐ Usar `$_SESSION['msg']`
+☐ Mostrar mensajes arriba de la página
+
+### ✔ Menú claro
+
+☐ Inicio
+☐ Laptops
+☐ Solicitudes
+☐ Incidencias
+☐ Historial
+☐ Cerrar sesión
+
+---
+
+## 🔐 6. BUENAS PRÁCTICAS
+
+☐ Usar `prepared statements`
+☐ Validar datos antes de guardar
+☐ No confiar en datos del formulario
+☐ Controlar acceso por rol
+
+---
+
+## ⭐ ORDEN RECOMENDADO PARA MAÑANA
+
+1️⃣ Dashboard (tarjetas)
+2️⃣ Estados con colores
+3️⃣ Tablas más claras
+4️⃣ Notificaciones
+5️⃣ Correos con PHPMailer
+
+---
+
+Cuando mañana empieces y algo **no te salga**, mándame:
+
+* el archivo
+* el error
+* o una captura del problema
+
+y lo vemos paso a paso 👍✨
+Vas muy bien, descansa 😴💻
