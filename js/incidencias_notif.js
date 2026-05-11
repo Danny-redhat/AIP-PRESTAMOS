@@ -11,5 +11,4 @@ setInterval(() => {
                 document.getElementById("badge_incidencias").innerText = "";
             }
         });
-}, 5000); // cada 5 segundos
-//🔹 Asegúrate de tener un <span id="badge_incidencias"></span> en tu navbar o donde quieras mostrar el contador.
+}, 5000); 

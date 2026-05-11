@@ -36,7 +36,7 @@ if ($usuario && password_verify($password, $usuario["contraseña"])) {
 <body>
 
 <div class="container">
-    <h2>🔐 Sistema de Préstamos</h2>
+    <h2>Sistema de Préstamos</h2>
 
     <?php if(!empty($error)): ?>
         <p style="color:red; text-align:center;"><b><?= $error ?></b></p>
