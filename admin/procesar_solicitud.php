@@ -80,6 +80,9 @@ $mensaje = "
 <p>Presente este código para retirar el equipo.</p>
 ";
 
+echo $sol["correo"];
+
+
 enviarCorreo(
     $sol["correo"],
     "Solicitud Aceptada",
