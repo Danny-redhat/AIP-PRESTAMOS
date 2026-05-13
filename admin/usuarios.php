@@ -1,13 +1,8 @@
-<?php
-session_start();
-require "../config/conexion.php";
-
+<?php session_start(); require "../config/conexion.php";
 if ($_SESSION['rol'] !== 'administrador') {
     header("Location: ../index.php");
     exit;
 }
-
-// Listar profesores
 $usuarios = $pdo->query("
     SELECT * FROM usuarios 
     WHERE rol = 'profesor'
@@ -22,18 +17,13 @@ $usuarios = $pdo->query("
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-
 <?php include $_SERVER['DOCUMENT_ROOT']."/includes/navbar.php"; ?>
-
 <div class="contenedor">
     <h2>Lista de Profesores</h2>
-
     <a href="usuarios_agregar.php">
         <button class="btn-success">➕ Agregar Profesor</button>
     </a>
-
     <br><br>
-
     <table>
         <thead>
             <tr>
@@ -67,6 +57,5 @@ $usuarios = $pdo->query("
         </tbody>
     </table>
 </div>
-
 </body>
 </html>

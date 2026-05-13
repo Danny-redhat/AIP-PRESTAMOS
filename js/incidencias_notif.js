@@ -1,5 +1,4 @@
 let sonidoIncidencia = new Audio("../assets/sonido.mp3"); // tu sonido
-
 setInterval(() => {
     fetch("incidencias_count.php")
         .then(res => res.json())
@@ -11,4 +10,4 @@ setInterval(() => {
                 document.getElementById("badge_incidencias").innerText = "";
             }
         });
-}, 5000); 
+}, 5000);

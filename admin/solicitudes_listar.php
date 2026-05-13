@@ -1,13 +1,8 @@
-<?php
-session_start();
-require "../config/conexion.php";
-require "../config/mail.php";
-
+<?php session_start(); require "../config/conexion.php"; require "../config/mail.php";
 if ($_SESSION["rol"] !== "administrador") {
     header("Location: ../index.php");
     exit;
 }
-
 $solicitudes = $pdo->query("
     SELECT s.*, u.nombre_completo, l.codigo 
     FROM solicitudes s
@@ -15,27 +10,21 @@ $solicitudes = $pdo->query("
     LEFT JOIN laptops l ON s.id_laptop=l.id
     WHERE s.estado='pendiente'
 ")->fetchAll();
-
-// Procesar aceptar/rechazar
 if($_POST){
     $id = $_POST['id_solicitud'];
-    $accion = $_POST['accion']; // aceptar o rechazar
-
+    $accion = $_POST['accion'];
     if($accion=='aceptar'){
-        // Generar código
         $codigo = substr(md5(uniqid()),0,8);
         $pdo->prepare("UPDATE solicitudes SET estado='aceptada', codigo_confirmacion=? WHERE id_solicitud=?")->execute([$codigo, $id]);
     } else {
         $pdo->prepare("UPDATE solicitudes SET estado='rechazada' WHERE id_solicitud=?")->execute([$id]);
     }
-
     header("Location: solicitudes_listar.php");
     exit;
 }
 ?>
 <link rel="stylesheet" href="../css/style.css">
 <?php include $_SERVER['DOCUMENT_ROOT']."/includes/navbar.php"; ?>
-
 <h2>Solicitudes Pendientes</h2>
 <table border="1" cellpadding="5">
 <tr>

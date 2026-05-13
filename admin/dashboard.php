@@ -13,13 +13,9 @@ if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "administrador") {
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-
-<?php include $_SERVER['DOCUMENT_ROOT']."/includes/navbar.php"; ?>
-
-
+    <?php include $_SERVER['DOCUMENT_ROOT']."/includes/navbar.php"; ?>
 <div class="contenedor">
     <h2>Bienvenido Administrador</h2>
-
     <ul class="menu-admin">
         <li><a href="usuarios.php">👨‍🏫 Profesores</a></li>
         <li><a href="laptops.php">💻 Laptops</a></li>
@@ -27,6 +23,5 @@ if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "administrador") {
         <li><a href="incidencias_listar.php">⚠️ Incidencias</a></li>
     </ul>
 </div>
-
 </body>
 </html>

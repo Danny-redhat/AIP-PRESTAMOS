@@ -1,12 +1,8 @@
-<?php
-session_start();
-require "../config/conexion.php";
-
+<?php session_start(); require "../config/conexion.php";
 if ($_SESSION['rol'] !== 'profesor') {
     header("Location: ../index.php");
     exit;
 }
-
 $id_usuario = $_SESSION['id_usuario'];
 $incidencias = $pdo->prepare("
     SELECT i.*, l.codigo FROM incidencias i
@@ -20,7 +16,6 @@ $incidencias = $incidencias->fetchAll();
 <?php include $_SERVER['DOCUMENT_ROOT']."/includes/navbar.php"; ?>
 <div class="container">
 <h2>⚠️ Mis Incidencias</h2>
-
 <table>
 <tr>
     <th>Fecha</th>
@@ -29,7 +24,6 @@ $incidencias = $incidencias->fetchAll();
     <th>Descripción</th>
     <th>Estado</th>
 </tr>
-
 <?php foreach($incidencias as $i): ?>
 <tr>
     <td><?= $i['fecha'] ?></td>

@@ -3,103 +3,104 @@ session_start();
 require "../config/conexion.php";
 require "../config/mail.php";
 
-if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "administrador") {
+if ($_SESSION['rol'] !== 'administrador') {
+    header("Location: ../index.php");
     exit;
 }
 
-$id = $_POST["id_solicitud"];
-$accion = $_POST["accion"];
+$id     = $_POST['id_solicitud'] ?? 0;
+$accion = $_POST['accion'] ?? '';
 
-// Obtener datos
+// Obtener datos completos de la solicitud
 $stmt = $pdo->prepare("
-    SELECT s.*, u.correo, u.nombre_completo, l.id AS laptop_id, l.codigo
+    SELECT s.*, u.correo, u.nombre_completo, u.id_usuario,
+           l.id AS laptop_id, l.codigo AS laptop_codigo
     FROM solicitudes s
     JOIN usuarios u ON s.id_usuario = u.id_usuario
     LEFT JOIN laptops l ON s.id_laptop = l.id
     WHERE s.id_solicitud = ?
 ");
-
 $stmt->execute([$id]);
 $sol = $stmt->fetch();
 
-
-// =========================
-// RECHAZAR
-// =========================
-if ($accion === "rechazar") {
-
-    $pdo->prepare("
-        UPDATE solicitudes 
-        SET estado='rechazada' 
-        WHERE id_solicitud=?
-    ")->execute([$id]);
-
-    enviarCorreo(
-        $sol["correo"],
-        "Solicitud rechazada",
-        "Tu solicitud de préstamo fue rechazada."
-    );
-
-    // Notificación
-    $pdo->prepare("
-        INSERT INTO notificaciones (usuario_id, mensaje)
-        VALUES (?, ?)
-    ")->execute([
-        $sol["id_usuario"],
-        "Tu solicitud fue RECHAZADA."
-    ]);
-
-    header("Location: solicitudes.php");
+if (!$sol) {
+    header("Location: solicitudes_listar.php");
     exit;
 }
 
+if ($accion === 'rechazar') {
+    $pdo->prepare("UPDATE solicitudes SET estado='rechazada' WHERE id_solicitud=?")
+        ->execute([$id]);
 
-// =========================
-// ACEPTAR
-// =========================
+    // Notificación interna
+    $pdo->prepare("INSERT INTO notificaciones (usuario_id, mensaje) VALUES (?, ?)")
+        ->execute([$sol['id_usuario'], "Tu solicitud fue RECHAZADA por el administrador."]);
 
-$codigo = strtoupper(substr(md5(uniqid()), 0, 8));
+    // Correo al profesor
+    enviarCorreo(
+        $sol['correo'],
+        "Solicitud de laptop rechazada",
+        "<p>Estimado/a <strong>{$sol['nombre_completo']}</strong>,</p>
+         <p>Tu solicitud de préstamo de laptop ha sido <strong style='color:#DC3545'>rechazada</strong>.</p>
+         <p>Si tienes dudas, acércate a la AIP.</p>",
+        $sol['nombre_completo']
+    );
 
-$pdo->prepare("
-    UPDATE solicitudes
-    SET estado='aceptada', codigo_confirmacion=?
-    WHERE id_solicitud=?
-")->execute([$codigo, $id]);
+    // Historial
+    $pdo->prepare("INSERT INTO historial (accion, usuario_id, descripcion) VALUES ('rechazar_solicitud', ?, ?)")
+        ->execute([$_SESSION['id_usuario'], "Solicitud #{$id} rechazada — Profesor: {$sol['nombre_completo']}"]);
 
+    header("Location: solicitudes_listar.php?msg=rechazada");
+    exit;
+}
 
-// 📧 Correo
-$mensaje = "
-<h3>Solicitud Aceptada</h3>
+if ($accion === 'aceptar') {
+    // Generar código legible (6 caracteres alfanuméricos en mayúsculas)
+    $codigo = strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6));
 
-<p>Profesor: {$sol['nombre_completo']}</p>
+    $pdo->prepare("UPDATE solicitudes SET estado='aceptada', codigo_confirmacion=? WHERE id_solicitud=?")
+        ->execute([$codigo, $id]);
 
-<p>Laptop: {$sol['codigo']}</p>
+    // Si hay laptop asignada, marcarla como prestada
+    if ($sol['laptop_id']) {
+        $pdo->prepare("UPDATE laptops SET estado='prestada' WHERE id=?")
+            ->execute([$sol['laptop_id']]);
+    }
 
-<p><b>Código de retiro:</b> $codigo</p>
+    // Notificación interna
+    $pdo->prepare("INSERT INTO notificaciones (usuario_id, mensaje) VALUES (?, ?)")
+        ->execute([
+            $sol['id_usuario'],
+            "Tu solicitud fue ACEPTADA. Código de retiro: {$codigo}. Preséntate a la AIP."
+        ]);
 
-<p>Presente este código para retirar el equipo.</p>
-";
+    // Correo al profesor con el código
+    $laptop_txt = $sol['laptop_codigo'] ? "Laptop asignada: <strong>{$sol['laptop_codigo']}</strong>" : "Laptop por asignar en la AIP";
+    enviarCorreo(
+        $sol['correo'],
+        "✅ Solicitud aceptada — Código de retiro: {$codigo}",
+        "<p>Estimado/a <strong>{$sol['nombre_completo']}</strong>,</p>
+         <p>Tu solicitud de préstamo ha sido <strong style='color:#28A745'>aceptada</strong>.</p>
+         <br>
+         <div style='background:#EEF2FF; border:2px dashed #1A4A8A; border-radius:10px; padding:20px; text-align:center;'>
+             <p style='margin:0; font-size:13px; color:#6B7280;'>Tu código de retiro es:</p>
+             <p style='font-size:2.4rem; font-weight:900; color:#003366; letter-spacing:8px; font-family:monospace; margin:8px 0;'>{$codigo}</p>
+             <p style='margin:0; font-size:12px; color:#6B7280;'>Preséntate a la AIP y muestra este código para retirar el equipo.</p>
+         </div>
+         <br>
+         <p>{$laptop_txt}</p>
+         <p><small>Una vez entregado el equipo, guarda este código. Lo necesitarás también para la devolución.</small></p>",
+        $sol['nombre_completo']
+    );
 
-echo $sol["correo"];
+    // Historial
+    $pdo->prepare("INSERT INTO historial (accion, usuario_id, descripcion) VALUES ('aceptar_solicitud', ?, ?)")
+        ->execute([$_SESSION['id_usuario'], "Solicitud #{$id} aceptada — Código: {$codigo} — Profesor: {$sol['nombre_completo']}"]);
 
+    header("Location: solicitudes_listar.php?msg=aceptada");
+    exit;
+}
 
-enviarCorreo(
-    $sol["correo"],
-    "Solicitud Aceptada",
-    $mensaje
-);
-
-
-// 🔔 Notificación
-$pdo->prepare("
-    INSERT INTO notificaciones (usuario_id, mensaje)
-    VALUES (?, ?)
-")->execute([
-    $sol["id_usuario"],
-    "Tu solicitud fue ACEPTADA. Código: $codigo"
-]);
-
-
-header("Location: solicitudes.php");
+header("Location: solicitudes_listar.php");
 exit;
 ?>

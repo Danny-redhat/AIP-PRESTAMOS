@@ -1,13 +1,8 @@
-<?php
-session_start();
-require "../config/conexion.php";
-
+<?php session_start(); require "../config/conexion.php";
 if($_SESSION['rol'] !== 'administrador'){
     header("Location: ../index.php");
     exit;
 }
-
-// Listar laptops
 $laptops = $pdo->query("SELECT * FROM laptops")->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -18,14 +13,10 @@ $laptops = $pdo->query("SELECT * FROM laptops")->fetchAll();
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-
 <?php include $_SERVER['DOCUMENT_ROOT']."/includes/navbar.php"; ?>
-
 <div class="contenedor">
     <h2>Inventario de Laptops</h2>
-
     <a href="laptops_agregar.php"><button class="btn-success">➕ Agregar Laptop</button></a>
-
     <table border="1" cellpadding="5">
         <tr style="background-color:#003366; color:#FFD700;">
             <th>Código</th>
@@ -35,7 +26,6 @@ $laptops = $pdo->query("SELECT * FROM laptops")->fetchAll();
             <th>Estado</th>
             <th>Acciones</th>
         </tr>
-
         <?php if(count($laptops) > 0): ?>
             <?php foreach($laptops as $l): ?>
                 <tr>
@@ -57,6 +47,5 @@ $laptops = $pdo->query("SELECT * FROM laptops")->fetchAll();
         <?php endif; ?>
     </table>
 </div>
-
 </body>
 </html>

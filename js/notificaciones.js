@@ -1,5 +1,4 @@
 let sonido = new Audio("../assets/sonido.mp3");
-
 setInterval(() => {
     fetch("notificaciones_count.php")
         .then(r => r.json())

@@ -1,13 +1,10 @@
 <?php
 session_start();
 require "../config/conexion.php";
-
 if ($_SESSION["rol"] !== "administrador") {
     header("Location: ../index.php");
     exit;
 }
-
-// Obtener todas las incidencias
 $incidencias = $pdo->query("
     SELECT i.*, u.nombre_completo, l.codigo 
     FROM incidencias i
@@ -18,11 +15,8 @@ $incidencias = $pdo->query("
 ?>
 <link rel="stylesheet" href="../css/style.css">
 <?php include $_SERVER['DOCUMENT_ROOT']."/includes/navbar.php"; ?>
-
-
 <div class="contenedor">
 <h2 style="color:#003366;">Incidencias Reportadas</h2>
-
 <table>
 <tr>
     <th>Profesor</th>
@@ -32,7 +26,6 @@ $incidencias = $pdo->query("
     <th>Estado</th>
     <th>Fecha</th>
 </tr>
-
 <?php foreach($incidencias as $i): ?>
 <tr>
     <td><?= $i['nombre_completo'] ?? 'N/A' ?></td>
