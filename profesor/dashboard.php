@@ -14,7 +14,7 @@ if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "profesor") {
 <body>
     <?php include $_SERVER['DOCUMENT_ROOT'] . "/includes/navbar.php"; ?>
     <div class="container">
-        <h2>👨‍🏫 Bienvenido, <?= $_SESSION['nombre'] ?></h2>
+        <h2>👨‍🏫 Bienvenido, <?= $_SESSION['nombre-completo'] ??$_SESSION['nombre'] ?? 'Profesor' ?></h2>
         <div class="dashboard-grid">
             <a href="solicitar.php"><button>💻 Solicitar Laptop</button></a>
             <a href="solicitud_listar.php"><button>📄 Mis Solicitudes</button></a>
@@ -24,4 +24,4 @@ if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "profesor") {
     </div>
 </body>
 </html>
-<script src="assets/js/incidencias_notif.js"></script>
+<script src="/assets/notificacion.mp3"></script>

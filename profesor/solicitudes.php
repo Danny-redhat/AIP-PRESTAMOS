@@ -118,6 +118,6 @@ function mostrarLaptops() {
     document.getElementById('div_proyectar').style.display = tipo === 'proyectar' ? 'block' : 'none';
 }
 </script>
-<?php include $_SERVER['DOCUMENT_ROOT'] . "/includes/footer.php"; ?>
+<?php include __DIR__ . "/../includes/footer.php"; ?>
 </body>
 </html>

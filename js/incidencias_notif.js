@@ -1,4 +1,4 @@
-let sonidoIncidencia = new Audio("../assets/sonido.mp3"); // tu sonido
+let sonidoIncidencia = new Audio("../assets/notificacion.mp3"); // tu sonido
 setInterval(() => {
     fetch("incidencias_count.php")
         .then(res => res.json())
