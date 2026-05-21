@@ -8,3 +8,4 @@
 </footer>
 </body>
 </html>
+//* Al final de navbar.php, después del </nav>: echo '<main class="main-wrapper">';*//

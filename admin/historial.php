@@ -1,19 +1,18 @@
 <?php
 session_start();
-require "../config/conexion.php";
+require __DIR__ . "/../config/conexion.php";
 
 if ($_SESSION['rol'] !== 'administrador') {
     header("Location: ../index.php");
     exit;
 }
 
-// ── FILTROS ─────────────────────────────────────────────
-$filtro_area   = $_GET['area']   ?? '';
-$filtro_desde  = $_GET['desde']  ?? '';
-$filtro_hasta  = $_GET['hasta']  ?? '';
-$filtro_accion = $_GET['accion'] ?? '';
+// ── FILTROS ──────────────────────────────────────────────
+$filtro_area  = trim($_GET['area']  ?? '');
+$filtro_desde = trim($_GET['desde'] ?? '');
+$filtro_hasta = trim($_GET['hasta'] ?? '');
 
-$where  = ["1=1"];
+$where  = ["p.id_prestamo IS NOT NULL"]; // solo movimientos reales
 $params = [];
 
 if ($filtro_area) {
@@ -21,50 +20,60 @@ if ($filtro_area) {
     $params[] = $filtro_area;
 }
 if ($filtro_desde) {
-    $where[]  = "h.fecha >= ?";
+    $where[]  = "p.fecha_prestamo >= ?";
     $params[] = $filtro_desde . " 00:00:00";
 }
 if ($filtro_hasta) {
-    $where[]  = "h.fecha <= ?";
+    $where[]  = "p.fecha_prestamo <= ?";
     $params[] = $filtro_hasta . " 23:59:59";
-}
-if ($filtro_accion) {
-    $where[]  = "h.accion = ?";
-    $params[] = $filtro_accion;
 }
 
 $whereSQL = implode(" AND ", $where);
 
-// ── DATOS ────────────────────────────────────────────────
+// ── CONSULTA PRINCIPAL ────────────────────────────────────
+// Une prestamos → solicitudes → usuarios → laptops
 $stmt = $pdo->prepare("
-    SELECT h.*, u.nombre_completo, u.area, u.dni,
-           l.codigo AS laptop_codigo
-    FROM historial h
-    LEFT JOIN usuarios u ON h.usuario_id = u.id_usuario
-    LEFT JOIN (
-        SELECT id_solicitud, id_laptop FROM solicitudes
-    ) s ON h.descripcion LIKE CONCAT('%#', s.id_solicitud, '%')
-    LEFT JOIN laptops l ON s.id_laptop = l.id
+    SELECT
+        p.id_prestamo,
+        p.fecha_prestamo,
+        p.fecha_devolucion,
+        p.estado        AS estado_prestamo,
+        p.codigo_confirmacion,
+        l.codigo        AS laptop_codigo,
+        l.marca,
+        l.tipo          AS laptop_tipo,
+        u.nombre_completo,
+        u.dni,
+        u.area,
+        s.tipo_solicitud,
+        s.fecha_solicitud,
+        s.mensaje
+    FROM prestamos p
+    JOIN solicitudes s ON p.solicitud_id = s.id_solicitud
+    JOIN usuarios u    ON s.id_usuario   = u.id_usuario
+    JOIN laptops l     ON p.laptop_id    = l.id
     WHERE $whereSQL
-    ORDER BY h.fecha DESC
+    ORDER BY p.fecha_prestamo DESC
     LIMIT 500
 ");
 $stmt->execute($params);
-$historial = $stmt->fetchAll();
+$movimientos = $stmt->fetchAll();
 
-// ── ÁREAS DISPONIBLES PARA FILTRO ───────────────────────
+// ── ÁREAS PARA FILTRO ─────────────────────────────────────
 $areas = $pdo->query(
-    "SELECT DISTINCT area FROM usuarios WHERE area IS NOT NULL AND area != '' ORDER BY area"
+    "SELECT DISTINCT area FROM usuarios
+     WHERE area IS NOT NULL AND area != ''
+     ORDER BY area"
 )->fetchAll(PDO::FETCH_COLUMN);
 
-// ── EXPORTAR CSV ─────────────────────────────────────────
+// ── EXPORTAR CSV ──────────────────────────────────────────
 if (isset($_GET['exportar'])) {
-    $nombre_archivo = "historial_AIP";
+    $nombre_archivo = "movimientos_laptops";
     if ($filtro_desde && $filtro_hasta) {
         $nombre_archivo .= "_{$filtro_desde}_al_{$filtro_hasta}";
     }
     if ($filtro_area) {
-        $nombre_archivo .= "_area_" . preg_replace('/[^a-zA-Z0-9]/', '_', $filtro_area);
+        $nombre_archivo .= "_" . preg_replace('/[^a-zA-Z0-9]/', '_', $filtro_area);
     }
     $nombre_archivo .= ".csv";
 
@@ -73,20 +82,29 @@ if (isset($_GET['exportar'])) {
     header('Pragma: no-cache');
 
     $out = fopen('php://output', 'w');
-    // BOM para que Excel abra tildes correctamente
-    fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF));
+    fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM para Excel
 
-    fputcsv($out, ['Fecha', 'Hora', 'Usuario', 'DNI', 'Area', 'Accion', 'Descripcion'], ';');
-    foreach ($historial as $h) {
-        $fecha = explode(' ', $h['fecha']);
+    fputcsv($out, [
+        'N°', 'Fecha Préstamo', 'Fecha Devolución', 'Estado',
+        'Laptop', 'Marca', 'Tipo Laptop',
+        'Profesor', 'DNI', 'Área / Curso',
+        'Tipo Solicitud', 'Código'
+    ], ';');
+
+    foreach ($movimientos as $i => $m) {
         fputcsv($out, [
-            $fecha[0] ?? '',
-            $fecha[1] ?? '',
-            $h['nombre_completo'] ?? 'Sistema',
-            $h['dni'] ?? '-',
-            $h['area'] ?? '-',
-            $h['accion'],
-            $h['descripcion'],
+            $i + 1,
+            $m['fecha_prestamo']   ? date('d/m/Y H:i', strtotime($m['fecha_prestamo']))   : '-',
+            $m['fecha_devolucion'] ? date('d/m/Y H:i', strtotime($m['fecha_devolucion'])) : 'Pendiente',
+            $m['estado_prestamo'] === 'prestado' ? 'En préstamo' : 'Devuelto',
+            $m['laptop_codigo'],
+            $m['marca'],
+            ucfirst($m['laptop_tipo']),
+            $m['nombre_completo'],
+            $m['dni'],
+            $m['area'] ?? '-',
+            ucfirst($m['tipo_solicitud']),
+            $m['codigo_confirmacion'],
         ], ';');
     }
     fclose($out);
@@ -97,48 +115,38 @@ if (isset($_GET['exportar'])) {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Historial — AIP Préstamos</title>
+    <title>Historial de Movimientos — AIP Préstamos</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         .filtros-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 12px;
-            margin-bottom: 1rem;
+            margin-bottom: .8rem;
         }
         .filtros-grid .form-group { margin-bottom: 0; }
-        .filtros-acciones {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-            margin-top: 4px;
-        }
-        .tag-accion {
+        .estado-pill {
             display: inline-block;
             padding: 2px 10px;
             border-radius: 20px;
-            font-size: 0.76rem;
+            font-size: .76rem;
             font-weight: 700;
-            background: #EEF2FF;
-            color: #3730A3;
         }
-        .tag-accion.aceptar_solicitud { background: #D1FAE5; color: #065F46; }
-        .tag-accion.rechazar_solicitud { background: #FEE2E2; color: #991B1B; }
-        .tag-accion.entrega_laptop  { background: #DBEAFE; color: #1E3A8A; }
-        .tag-accion.devolucion_laptop { background: #FEF3C7; color: #92400E; }
+        .pill-prestado  { background: #DBEAFE; color: #1E3A8A; }
+        .pill-devuelto  { background: #D1FAE5; color: #065F46; }
     </style>
 </head>
 <body>
 <?php include __DIR__ . "/../includes/navbar.php"; ?>
 
 <div class="contenedor">
+    <!-- CABECERA -->
     <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         <div>
-            <h2>Historial de Prestamos</h2>
-            <p>Registro de préstamos, entregas y devoluciones de laptops</p>
+            <h2>Historial de movimientos de laptops</h2>
+            <p>Qué profesor usó cada laptop, cuándo la recogió y cuándo la devolvió</p>
         </div>
-        <a href="?<?= http_build_query(array_merge($_GET, ['exportar'=>'1'])) ?>"
+        <a href="?<?= http_build_query(array_merge($_GET, ['exportar' => '1'])) ?>"
            class="btn btn-success">
             ⬇ Descargar CSV
         </a>
@@ -147,14 +155,14 @@ if (isset($_GET['exportar'])) {
     <!-- FILTROS -->
     <div class="card">
         <div class="card-header">
-            <span class="card-title">Filtros de búsqueda</span>
+            <span class="card-title">Filtrar movimientos</span>
         </div>
         <form method="GET" action="">
             <div class="filtros-grid">
                 <div class="form-group">
                     <label>Área / Curso</label>
                     <select name="area">
-                        <option value="">— Todos —</option>
+                        <option value="">— Todos los cursos —</option>
                         <?php foreach ($areas as $a): ?>
                             <option value="<?= htmlspecialchars($a) ?>"
                                 <?= $filtro_area === $a ? 'selected' : '' ?>>
@@ -164,29 +172,22 @@ if (isset($_GET['exportar'])) {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Acción</label>
-                    <select name="accion">
-                        <option value="">— Todas —</option>
-                        <option value="aceptar_solicitud"  <?= $filtro_accion==='aceptar_solicitud'?'selected':'' ?>>Solicitud aceptada</option>
-                        <option value="rechazar_solicitud" <?= $filtro_accion==='rechazar_solicitud'?'selected':'' ?>>Solicitud rechazada</option>
-                        <option value="entrega_laptop"     <?= $filtro_accion==='entrega_laptop'?'selected':'' ?>>Entrega de laptop</option>
-                        <option value="devolucion_laptop"  <?= $filtro_accion==='devolucion_laptop'?'selected':'' ?>>Devolución de laptop</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Desde</label>
+                    <label>Desde (fecha préstamo)</label>
                     <input type="date" name="desde" value="<?= htmlspecialchars($filtro_desde) ?>">
                 </div>
                 <div class="form-group">
-                    <label>Hasta</label>
+                    <label>Hasta (fecha préstamo)</label>
                     <input type="date" name="hasta" value="<?= htmlspecialchars($filtro_hasta) ?>">
                 </div>
             </div>
-            <div class="filtros-acciones">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                 <button type="submit" class="btn btn-primary btn-sm">🔍 Filtrar</button>
-                <a href="historial.php" class="btn btn-outline-azul btn-sm">✕ Limpiar filtros</a>
-                <span style="font-size:0.85rem; color:var(--gris-texto); margin-left:8px;">
-                    <?= count($historial) ?> registro(s) encontrado(s)
+                <a href="historial.php" class="btn btn-outline-azul btn-sm">✕ Limpiar</a>
+                <span style="font-size:.85rem; color:var(--gris-texto); margin-left:8px;">
+                    <?= count($movimientos) ?> movimiento(s) encontrado(s)
+                    <?php if ($filtro_area): ?>
+                        — Área: <strong><?= htmlspecialchars($filtro_area) ?></strong>
+                    <?php endif; ?>
                 </span>
             </div>
         </form>
@@ -198,45 +199,67 @@ if (isset($_GET['exportar'])) {
             <table>
                 <thead>
                     <tr>
-                        <th>Fecha y hora</th>
-                        <th>Profesor / Usuario</th>
-                        <th>Área</th>
-                        <th>Acción</th>
+                        <th>N°</th>
                         <th>Laptop</th>
-                        <th>Descripción</th>
+                        <th>Tipo</th>
+                        <th>Profesor</th>
+                        <th>Área / Curso</th>
+                        <th>Fecha préstamo</th>
+                        <th>Fecha devolución</th>
+                        <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
-                <?php if (empty($historial)): ?>
+                <?php if (empty($movimientos)): ?>
                     <tr>
-                        <td colspan="5" style="text-align:center; color:var(--gris-texto); padding:2rem;">
-                            No hay registros con los filtros seleccionados.
+                        <td colspan="8" style="text-align:center; color:var(--gris-texto); padding:2rem;">
+                            No hay movimientos registrados con esos filtros.
                         </td>
                     </tr>
                 <?php endif; ?>
-                <?php foreach ($historial as $h): ?>
+                <?php foreach ($movimientos as $i => $m): ?>
                     <tr>
-                        <td style="white-space:nowrap; font-size:0.85rem; color:var(--gris-texto);">
-                            <?= date('d/m/Y', strtotime($h['fecha'])) ?><br>
-                            <small><?= date('H:i', strtotime($h['fecha'])) ?></small>
+                        <td style="color:var(--gris-texto); font-size:.82rem;"><?= $i + 1 ?></td>
+                        <td>
+                            <strong><?= htmlspecialchars($m['laptop_codigo']) ?></strong><br>
+                            <small style="color:var(--gris-texto);"><?= htmlspecialchars($m['marca']) ?></small>
+                        </td>
+                        <td><?= ucfirst($m['laptop_tipo']) ?></td>
+                        <td>
+                            <strong><?= htmlspecialchars($m['nombre_completo']) ?></strong><br>
+                            <small style="color:var(--gris-texto);">DNI: <?= $m['dni'] ?></small>
                         </td>
                         <td>
-                            <strong><?= htmlspecialchars($h['nombre_completo'] ?? 'Sistema') ?></strong>
-                            <?php if ($h['dni']): ?>
-                                <br><small style="color:var(--gris-texto);">DNI: <?= $h['dni'] ?></small>
+                            <?php if ($m['area']): ?>
+                                <span class="estado estado-pendiente" style="font-size:.78rem;">
+                                    <?= htmlspecialchars($m['area']) ?>
+                                </span>
+                            <?php else: ?>
+                                <span style="color:var(--gris-texto);">—</span>
                             <?php endif; ?>
                         </td>
-                        <td><?= htmlspecialchars($h['area'] ?? '—') ?></td>
+                        <td style="font-size:.85rem; white-space:nowrap;">
+                            <?= date('d/m/Y', strtotime($m['fecha_prestamo'])) ?><br>
+                            <small style="color:var(--gris-texto);">
+                                <?= date('H:i', strtotime($m['fecha_prestamo'])) ?>
+                            </small>
+                        </td>
+                        <td style="font-size:.85rem; white-space:nowrap;">
+                            <?php if ($m['fecha_devolucion']): ?>
+                                <?= date('d/m/Y', strtotime($m['fecha_devolucion'])) ?><br>
+                                <small style="color:var(--gris-texto);">
+                                    <?= date('H:i', strtotime($m['fecha_devolucion'])) ?>
+                                </small>
+                            <?php else: ?>
+                                <span style="color:var(--gris-texto); font-style:italic; font-size:.82rem;">
+                                    Pendiente
+                                </span>
+                            <?php endif; ?>
+                        </td>
                         <td>
-                            <span class="tag-accion <?= $h['accion'] ?>">
-                                <?= htmlspecialchars($h['accion']) ?>
+                            <span class="estado-pill <?= $m['estado_prestamo'] === 'prestado' ? 'pill-prestado' : 'pill-devuelto' ?>">
+                                <?= $m['estado_prestamo'] === 'prestado' ? 'En préstamo' : 'Devuelto' ?>
                             </span>
-                        </td>
-                        <td>
-                            <?= htmlspecialchars($h['laptop_codigo'] ?? '—') ?>
-                        </td>
-                        <td style="font-size:0.88rem;">
-                            <?= htmlspecialchars($h['descripcion']) ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
